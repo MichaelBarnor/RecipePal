@@ -1,0 +1,17 @@
+body {
+    color: white;
+    text-align: center;
+    font-family: "Lucida Console", monospace;
+}
+
+body a {
+    color: blue;
+    text-decoration-line: underline;
+}
+
+body h2 {
+    color: orange;}
+
+body h1 {
+    color: green;
+    padding-top: 50px; }

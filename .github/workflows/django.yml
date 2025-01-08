@@ -1,0 +1,68 @@
+name: Django CI
+
+on:
+  push:
+    # branches: [ "main", "testing" ]
+    branches: [ "main"]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: ['3.10']
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install selenium webdriver_manager
+    
+    # used when test locally 
+    # - name: Set up Chrome
+    #   uses: browser-actions/setup-chrome@latest
+    #   with:
+    #     chrome-version: "stable"
+
+    # used when pushing to github
+    - name: Set up ChromeDriver
+      run: |
+        wget https://storage.googleapis.com/chrome-for-testing-public/129.0.6668.100/linux64/chromedriver-linux64.zip
+        unzip chromedriver-linux64.zip -d $GITHUB_WORKSPACE/chromedriver
+        
+        echo "$GITHUB_WORKSPACE/chromedriver/chromedriver-linux64" >> $GITHUB_PATH
+    - name: Set up Chrome
+      run: |
+        wget https://storage.googleapis.com/chrome-for-testing-public/129.0.6668.100/linux64/chrome-linux64.zip
+        unzip chrome-linux64.zip -d $GITHUB_WORKSPACE/chrome
+        
+        echo "$GITHUB_WORKSPACE/chrome/chrome-linux64" >> $GITHUB_PATH
+    
+    # for debugging purposes
+    # - name: Check Chrome download
+    #   run: |
+    #     ls -l $GITHUB_WORKSPACE
+    #     ls -l $GITHUB_WORKSPACE/chrome || echo "Chrome directory not found"
+    # - name: Check ChromeDriver download
+    #   run: |
+    #     ls -l $GITHUB_WORKSPACE/chromedriver || echo "ChromeDriver directory not found"
+    # - name: Print Chrome and ChromeDriver version
+    #   run: |
+    #     $GITHUB_WORKSPACE/chrome/chrome-linux64/chrome --version
+    #     $GITHUB_WORKSPACE/chromedriver/chromedriver-linux64/chromedriver --version
+
+    - name: Run Tests
+      run: |
+        python manage.py test
+      env:
+        DJANGO_SETTINGS_MODULE: mysite.settings
